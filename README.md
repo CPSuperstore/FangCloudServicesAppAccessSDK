@@ -4,7 +4,6 @@ The SDK for accessing FangCloudServices with Application Access Credentials
 Support for device code auth is coming soon.
 
 ## Installation
-**NOTE**: this is not set up yet. For now, simply download the Python package.
 ```shell
 pip install FCSAppAccess 
 ```
