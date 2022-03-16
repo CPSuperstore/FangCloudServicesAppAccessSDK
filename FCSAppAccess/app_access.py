@@ -1,13 +1,12 @@
-import datetime
 import threading
 import time
 import typing
 import urllib.parse
-import FCSAppAccess.models.device_code as device_code_model
 
 import requests
 
 import FCSAppAccess.exceptions as exceptions
+import FCSAppAccess.models.device_code as device_code_model
 
 
 class FCSAppAccess:
