@@ -1,6 +1,9 @@
+import datetime
 import threading
+import time
 import typing
 import urllib.parse
+import FCSAppAccess.models.device_code as device_code_model
 
 import requests
 
@@ -74,13 +77,42 @@ class FCSAppAccess:
         })
         self.set_access_token(r.json()["access_token"], r.json()["refresh_token"])
 
-    def device_code(self):
-        raise NotImplementedError("Device Code Coming Soon")
+    def device_code(self) -> device_code_model.DeviceCode:
+        r = requests.post(self.url_base + "/oauth2", json={
+            "grant_type": "device_code",
+            "client_id": self._client_id,
+            "client_secret": self._client_secret,
+            "scopes": self.get_scope_string()
+        })
+        return device_code_model.DeviceCode(**r.json())
 
-    def device_code_poll(self):
-        raise NotImplementedError("Device Code Coming Soon")
+    def device_code_poll(self, device_code: device_code_model.DeviceCode):
+        while True:
+            r = requests.post(self.url_base + "/oauth2", json={
+                "grant_type": "device_code",
+                "client_id": self._client_id,
+                "client_secret": self._client_secret,
+                "device_code": device_code.device_code
+            })
 
-    def device_code_poll_async(self) -> threading.Thread:
-        t = threading.Thread(target=self.device_code_poll, daemon=True, name="FCSAppAccessSDK_DeviceCodePollThread")
+            json = r.json()
+            if r.status_code == 400:
+                if json["error"] == "access_denied":
+                    raise exceptions.AccessDeniedException("The client has rejected the request")
+
+                elif json["error"] == "expired_token":
+                    raise exceptions.ExpiredTokenException("The device code you have requested is expired")
+
+            elif r.status_code == 200:
+                self.set_access_token(r.json()["access_token"], r.json()["refresh_token"])
+                return
+
+            time.sleep(device_code.interval.total_seconds())
+
+    def device_code_poll_async(self, device_code: device_code_model.DeviceCode) -> threading.Thread:
+        t = threading.Thread(
+            target=self.device_code_poll, args=(device_code, ), daemon=True,
+            name="FCSAppAccessSDK_DeviceCodePollThread"
+        )
         t.start()
         return t

@@ -32,6 +32,14 @@ class TestCaseComparisons(unittest.TestCase):
             ).client_credentials()
         )
 
+    def test_device_code(self):
+        access = FCSAppAccess(
+            credentials["client_id"], credentials["client_secret"], "*:*:*"
+        )
+        device_code = access.device_code()
+        print(device_code.verification_uri_full)
+        print(access.device_code_poll(device_code))
+
 
 if __name__ == '__main__':
     unittest.main()
