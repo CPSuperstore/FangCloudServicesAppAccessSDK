@@ -5,7 +5,7 @@ Support for device code auth is coming soon.
 
 ## Installation
 ```shell
-pip install FCSAppAccess 
+pip install FCSAppAccessSDK
 ```
 
 ## Usage
