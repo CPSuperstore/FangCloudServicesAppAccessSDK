@@ -10,7 +10,7 @@ if "tests" in packages:
 
 setup(
     name='FCSAppAccessSDK',
-    version='1.0',
+    version='1.0.1',
     packages=packages,
     url='https://github.com/CPSuperstore/FangCloudServicesAppAccessSDK',
     license='Apache License 2.0',
