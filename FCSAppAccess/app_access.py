@@ -32,10 +32,19 @@ class FCSAppAccess:
         if refresh_token is not None:
             self._refresh_token = refresh_token
 
+    def get_tokens(self) -> typing.Tuple[str, str]:
+        return self._access_token, self._refresh_token
+
+    def get_access_token(self) -> str:
+        return self._access_token
+
+    def get_refresh_token(self) -> str:
+        return self._refresh_token
+
     def _url_encode(self, text: str) -> str:
         return urllib.parse.quote_plus(str(text))
 
-    def client_credentials(self):
+    def client_credentials(self) -> typing.Tuple[str, str]:
         r = requests.post(self.url_base + "/oauth2", json={
             "grant_type": "client_credentials",
             "client_id": self._client_id,
@@ -53,7 +62,9 @@ class FCSAppAccess:
 
         self.set_access_token(r.json()["access_token"], r.json()["refresh_token"])
 
-    def refresh_token(self):
+        return r.json()["access_token"], r.json()["refresh_token"]
+
+    def refresh_token(self) -> typing.Tuple[str, str]:
         r = requests.post(self.url_base + "/oauth2", json={
             "grant_type": "refresh_token",
             "client_id": self._client_id,
@@ -62,12 +73,14 @@ class FCSAppAccess:
         })
         self.set_access_token(r.json()["access_token"], r.json()["refresh_token"])
 
+        return r.json()["access_token"], r.json()["refresh_token"]
+
     def get_auth_code_url(self, redirect_uri: str) -> str:
         return self.url_base + "/oauth2/code?client_id={}&redirect_uri={}&response_type=code&scope={}".format(
             self._client_id, redirect_uri, self._url_encode(self.get_scope_string())
         )
 
-    def authorization_code(self, auth_code: str):
+    def authorization_code(self, auth_code: str) -> typing.Tuple[str, str]:
         r = requests.post(self.url_base + "/oauth2", json={
             "grant_type": "authorization_code",
             "client_id": self._client_id,
@@ -75,6 +88,8 @@ class FCSAppAccess:
             "code": auth_code
         })
         self.set_access_token(r.json()["access_token"], r.json()["refresh_token"])
+
+        return r.json()["access_token"], r.json()["refresh_token"]
 
     def device_code(self) -> device_code_model.DeviceCode:
         r = requests.post(self.url_base + "/oauth2", json={
@@ -85,7 +100,7 @@ class FCSAppAccess:
         })
         return device_code_model.DeviceCode(**r.json())
 
-    def device_code_poll(self, device_code: device_code_model.DeviceCode):
+    def device_code_poll(self, device_code: device_code_model.DeviceCode) -> typing.Tuple[str, str]:
         while True:
             r = requests.post(self.url_base + "/oauth2", json={
                 "grant_type": "device_code",
@@ -104,7 +119,7 @@ class FCSAppAccess:
 
             elif r.status_code == 200:
                 self.set_access_token(r.json()["access_token"], r.json()["refresh_token"])
-                return
+                return r.json()["access_token"], r.json()["refresh_token"]
 
             time.sleep(device_code.interval.total_seconds())
 
